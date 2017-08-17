@@ -25,17 +25,40 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     /** Application variable */
-    static const std::size_t Nx=10, Ny=10, Nz=10;
+    static const std::size_t Nx=50, Ny=50, Nz=50;
     std::vector<float> myTemperature(Nx*Ny*Nz);
-    for (int i = 0; i < 10*10*10; i++)
-        myTemperature[i] = i;
+    int idx = 0;
+    for (int i = 0; i < Nx; i++)
+        for (int j = 0; j < Ny; j++)
+            for (int k = 0; k < Nz; k++)
+            {
+                float x = (float)i/(float)(Nx-1);
+                float y = (float)j/(float)(Ny-1);
+                float z = (float)k/(float)(Nz-1);
 
+                x *= M_PI*2;
+                y *= M_PI*2;
+                z *= M_PI*2;
+
+                float val;
+
+                //ADIOS lion.
+                val = sin(x*x + y*y + z*z);
+
+                val = x*x*cos(y) + y*y*sin(x) + z*z*sin(x)*cos(y);
+
+//                val = 1-(x*x + y*y + z*z) + cos(x)*sin(y)*sin(x*y*z);
+
+                myTemperature[idx] = val;
+                idx++;
+            }
+    
     try
     {
         /** ADIOS class factory of IO class objects, DebugON is recommended */
         adios2::ADIOS adios(MPI_COMM_WORLD, adios2::DebugON);
 
-        auto &visTransform = adios.GetTransform("Vis", {{"iso", "3.1"}});
+        auto &visTransform = adios.GetTransform("Vis", {{"iso", "0.1"}});
 
         /*** IO class object: settings and factory of Settings: Variables,
          * Parameters, Transports, and Execution: Engines */
